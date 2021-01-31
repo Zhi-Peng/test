@@ -1,0 +1,14 @@
+/* 更据习惯配置 */
+input, textarea {
+  outline: none;
+  border: none;
+}
+a {
+  text-decoration: none;
+  outline: 0;
+  color: inherit;
+}
+a:link {
+  -webkit-tap-highlight-color: white;
+  -webkit-tap-highlight-color: transparent;
+}
