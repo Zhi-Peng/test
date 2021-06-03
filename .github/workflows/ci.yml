@@ -23,7 +23,7 @@ jobs:
     - name: Deploy to Server
       uses: easingthemes/ssh-deploy@v2.1.5
       env:
-          SSH_PRIVATE_KEY: ${{ secrets.aliyun }}
+          SSH_PRIVATE_KEY: ${{ secrets.ALIYU }}
           ARGS: '-rltgoDzvO --delete'
           SOURCE: dist # 这是要复制到阿里云静态服务器的文件夹名称
           REMOTE_HOST: '121.196.163.4' # 你的阿里云公网地址
