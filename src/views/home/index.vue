@@ -12,7 +12,7 @@ export default {
   data () {
     return {
       style,
-      input: ''
+      input: 'd'
     }
   },
   methods: {
