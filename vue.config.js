@@ -41,13 +41,13 @@ module.exports = {
     }
   },
   configureWebpack: (config) => {
-    if (isProduction) {
-      return {
-        plugins: [
-          new BundleAnalyzerPlugin()
-        ]
-      }
-    }
+    // if (isProduction) {
+    //   return {
+    //     plugins: [
+    //       new BundleAnalyzerPlugin()
+    //     ]
+    //   }
+    // }
   }
 };
 
