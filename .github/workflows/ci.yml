@@ -27,7 +27,7 @@ jobs:
     # 将这些 .nuxt static nuxt.config.js package.json package-lock.json pm2.config.json 文件打包在 release.tgz 中
      # 此处是为了在方便，在服务器中直接解压，获得所有文件，无需单独传
      # pm2 帮助我们在 Node服务器，启动项目的一个工具，具体可查看官网 https://github.com/Unitech/pm2
-    - run: tar -zcvf dist
+    - run: tar -zcvf release.tgz dist
  
     # 发布版本 Release
       # 与 Github 建立连接( 此处用于将 release.tgz 上传到 github 上 )
@@ -73,6 +73,6 @@ jobs:
           # npm install --production
           # pm2 reload pm2.config.json
         script: |
-          cd /root/test
+          cd /root
           wget https://github.com/Zhi-Peng/test/releases/latest/download/release.tgz -O release.tgz
           tar zxvf release.tgz
