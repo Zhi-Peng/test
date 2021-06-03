@@ -1,27 +1,78 @@
-# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
-
-name: Node.js CI
-
+# 自动化部署名称
+name: Publish And Deploy Demo
+ 
+# 触发部署的条件: 当 master 分支, 有 push 的操作, 即可触发。
 on:
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-
+    branches: # 此处不仅限于监听分支, 还可监听 tag
+      - master
+    paths-ignore: # 下列文件的变更不触发部署，可以自行添加
+      - README.md
+      - LICENSE
+ 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [12.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v2
+  build-and-deploy:
+    runs-on: ubuntu-latest # 使用ubuntu系统镜像运行自动化脚本
+    steps: # 进入自动化步骤
+ 
+    # 第一步，下载代码仓库
+    - name: Checkout
+      uses: actions/checkout@master
+ 
+    # 打包构建
+    - name: Build
+      uses: actions/setup-node@master
+    - run: npm install
+    - run: npm run build
+    # 将这些 .nuxt static nuxt.config.js package.json package-lock.json pm2.config.json 文件打包在 release.tgz 中
+     # 此处是为了在方便，在服务器中直接解压，获得所有文件，无需单独传
+     # pm2 帮助我们在 Node服务器，启动项目的一个工具，具体可查看官网 https://github.com/Unitech/pm2
+    - run: tar -zcvf dist
+ 
+    # 发布版本 Release
+      # 与 Github 建立连接( 此处用于将 release.tgz 上传到 github 上 )
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
       with:
-        node-version: ${{ matrix.node-version }}
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+ 
+    # 上传构建结果到 Release
+       # 将 release.tgz 上传到 github 上
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./release.tgz
+        asset_name: release.tgz
+        asset_content_type: application/x-tgz
+ 
+    # 部署到服务器
+    - name: Deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }} # 公网 IP 或 域名
+        username: ${{ secrets.USERNAME }} # 登录名
+        password: ${{ secrets.PASSWORD }} # 密码
+        port: ${{ secrets.PORT }} # 端口
+        # 类似在服务端的终端-执行以下操作
+          # 1. 找到需要存放文件的地方
+          # 2. 从 Github 上将 release.tgz 复制一份放入文件内
+          # 3. 解压 release.tgz 文件
+          # 4. 安装插件
+          # 5. 重启 pm2, 并执行 pm2.config.json 内操作，
+          # 6. pm2.onfig.json 是 启动 项目，( npm start )
+          # npm install --production
+          # pm2 reload pm2.config.json
+        script: |
+          cd /root/test
+          wget https://github.com/Zhi-Peng/test/releases/latest/download/release.tgz -O release.tgz
+          tar zxvf release.tgz
